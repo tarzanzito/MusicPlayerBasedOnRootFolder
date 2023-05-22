@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MusicManager
 {
@@ -29,83 +30,7 @@ namespace MusicManager
 
         #endregion
 
-        #region UI Events
-
-        private void FormMain_Load(object sender, EventArgs e)
-        {
-            this.Text = $"{this.Text} - Version: {System.Windows.Forms.Application.ProductVersion}";
-            this.textBoxFolder.Text = _appConfigInfo.FolderRoot;
-        }
-
-        private void buttonClose_Click(object sender, EventArgs e)
-        {
-            this.backgroundWorker1.CancelAsync();
-            Close();
-        }
-
-        private void buttonCancel_Click(object sender, EventArgs e)
-        {
-            if (backgroundWorker1.IsBusy != true)
-                return;
-
-            if (backgroundWorker1.WorkerSupportsCancellation == true)
-                backgroundWorker1.CancelAsync();
-        }
-
-        private void buttonPlay_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                TreeNode treeNode = treeView1.SelectedNode;
-                string files = Xpto(treeView1.SelectedNode);
-                Process.Start(_appConfigInfo.MusicPlayerApplication, files);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void FormMain_Shown(object sender, EventArgs e)
-        {
-            //https://learn.microsoft.com/en-us/dotnet/desktop/winforms/order-of-events-in-windows-forms?view=netframeworkdesktop-4.8
-
-            this.buttonProcess_Click(sender, e);
-        }
-
-        private void buttonProcess_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (textBoxFolder.Text == null)
-                    return;
-
-                if (textBoxFolder.Text == "")
-                    return;
-
-                if (backgroundWorker1.IsBusy == true)
-                    return;
-
-                ChangeFormStatus(false);
-
-
-                // set arguments to worker
-                // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
-                // deve receber object class com toda a info necessaria como arguments.
-                WorkerArguments arguments = new WorkerArguments(textBoxFolder.Text);
-
-                backgroundWorker1.RunWorkerAsync(arguments);
-            }
-            catch (Exception ex)
-            {
-                //listBox1.Items.Add(ex.Message);
-                ChangeFormStatus(true);
-            }
-        }
-
-        #endregion
-
-        #region BackgroundWorker events
+        #region BackgroundWorker1 events
 
         // e.Argument - deve receber object class com toda a info necessaria.
         // Não devem ser usados directamente os conteudos que estão nos componentes
@@ -114,7 +39,7 @@ namespace MusicManager
             try
             {
                 //get Argument
-                WorkerArguments arguments = e.Argument as WorkerArguments;
+                WorkerArguments1 arguments = e.Argument as WorkerArguments1;
 
                 if (Directory.Exists(arguments.FolderRoot))
                     ListDirectory(arguments.FolderRoot, e);
@@ -123,33 +48,12 @@ namespace MusicManager
             }
             catch (Exception ex)
             {
-              //  listBox1.Items.Add(ex.Message); //review throw in thread
-                ChangeFormStatus(true);
+                throw ex;
             }
         }
 
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            //if (_isMarquee)
-            //{
-            //    progressBar1.Style = ProgressBarStyle.Marquee;
-            //    progressBar1.Value = 0;
-            //    _isMarquee = false;
-            //    return;
-            //}
-
-            //if (_isFirstItem)
-            //{
-            //    progressBar1.Style = ProgressBarStyle.Blocks;
-            //    progressBar1.Maximum = _totalFolders;
-            //    progressBar1.Value = 0;
-            //    _isFirstItem = false;
-            //    return;
-            //}
-
-            //// Não devem ser usados directamente os conteudos que estão nos componentes ou em fields da classe
-            //// deve receber object class com toda a info necessaria no "e.UserState".
-
             //if (e.UserState != null)
             //{
             //    WorkerProcessState WorkerProcessState = e.UserState as WorkerProcessState;
@@ -160,6 +64,9 @@ namespace MusicManager
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (e.Cancelled)
+                _treeNodeRoot = null;
+
             if (_treeNodeRoot != null)
             {
                 treeView1.Nodes.Add(_treeNodeRoot);
@@ -173,7 +80,7 @@ namespace MusicManager
 
         #endregion
 
-        #region BackgroundWorker Methods
+        #region BackgroundWorker1 Methods
 
         private void ListDirectory(string path, DoWorkEventArgs e)
         {
@@ -188,7 +95,7 @@ namespace MusicManager
 
         private TreeNode CreateDirectoryNode(DirectoryInfo directoryInfo, DoWorkEventArgs e)
         {
-            if (e.Cancel == true)
+            if (e.Cancel)
                 return null;
 
             TreeNode directoryNode = new TreeNode(directoryInfo.Name);
@@ -199,7 +106,7 @@ namespace MusicManager
 
             foreach (FileInfo file in directoryInfo.GetFiles())
             {
-                if (backgroundWorker1.CancellationPending == true)
+                if (backgroundWorker1.CancellationPending)
                 {
                     e.Cancel = true;
                     break;
@@ -219,11 +126,14 @@ namespace MusicManager
                     directoryNode.Nodes.Add(treeNode);
                 }
 
-                //Thread.Sleep(100);
+                Thread.Sleep(10);
             }
 
             foreach (var directory in directoryInfo.GetDirectories())
             {
+                if (e.Cancel)
+                    break;
+
                 directoryNode.Nodes.Add(CreateDirectoryNode(directory, e));
             }
 
@@ -232,8 +142,14 @@ namespace MusicManager
 
         private void RemoveDirectoryNode(TreeNodeCollection nodeCollection, DoWorkEventArgs e)
         {
+            if (e.Cancel)
+                return;
+
             foreach (TreeNode node in nodeCollection)
             {
+                 if (e.Cancel)
+                    break;
+
                 if (backgroundWorker1.CancellationPending == true)
                 {
                     e.Cancel = true;
@@ -247,6 +163,135 @@ namespace MusicManager
                     node.Remove();
                 else
                     RemoveDirectoryNode(node.Nodes, e);
+            }
+        }
+
+        #endregion
+
+        #region BackgroundWorker2 events
+
+        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                //get Argument
+                WorkerArguments2 arguments = e.Argument as WorkerArguments2;
+
+                string files = ProcessFilesFromTree(arguments.TreeNodeRoot, arguments.NodeRootTextLenght, e);
+                WorkerResult2 result = new WorkerResult2(files);
+                e.Result = result;
+            }
+            catch (Exception ex) 
+            {
+              //  e.Cancel = true;
+                e.Result = ex;
+                
+            }
+        }
+
+        private void backgroundWorker2_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+
+        }
+
+        private void backgroundWorker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            try
+            {
+                if (!e.Cancelled)
+                {
+                    if (e.Result != null)
+                    {
+                        //aaaaaaaaaaaaa fazer em todos
+
+                        //bool isEception = typeof(System.Exception).IsAssignableFrom(e.Result.GetType());
+                        if (e.Result.GetType().IsSubclassOf(typeof(System.Exception)))
+                        {
+                            Exception ex = e.Result as Exception;
+                            throw ex;
+                        }
+                        
+                        
+
+                        if (e.Result.GetType() == typeof(WorkerResult2))
+                        {
+                            WorkerResult2 result = (WorkerResult2)e.Result;
+                            if (result.Files != null)
+                            {
+                                Process.Start(_appConfigInfo.MusicPlayerApplication, result.Files);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            ChangeFormStatus(true);
+        }
+
+        #endregion
+
+        #region BackgroundWorker2 Methods
+
+        private string ProcessFilesFromTree(TreeNode treeNode, int NodeRootTextLenght, DoWorkEventArgs e)
+        {
+            List<string> audioFileArray = new List<string>();
+
+            GetFilesFromTree(treeNode, audioFileArray, NodeRootTextLenght, e);
+
+            if (e.Cancel)
+                return null;
+
+            StringBuilder sb = new StringBuilder();
+            foreach (string audioFile in audioFileArray)
+            {
+                if (backgroundWorker1.CancellationPending)
+                {
+                    e.Cancel = true;
+                   break;
+                }
+
+                sb.Append("\"" + this._appConfigInfo.FolderRoot + audioFile + "\" ");
+                Thread.Sleep(100);
+            }
+
+            if (e.Cancel)
+                return null;
+            
+            return sb.ToString();
+        }
+
+        private void GetFilesFromTree(TreeNode treeNode, List<string> audioFileArray, int NodeRootTextLenght, DoWorkEventArgs e)
+        {
+            if (e.Cancel)
+                return;
+            
+            string ext;
+            bool isSound;
+
+            foreach (TreeNode node in treeNode.Nodes)
+            {
+                if (backgroundWorker1.CancellationPending)
+                {
+                    e.Cancel = true;
+                    break;
+                }
+
+                if (node.Nodes.Count > 0)
+                {
+                    GetFilesFromTree(node, audioFileArray, NodeRootTextLenght, e);
+                    continue;
+                }
+
+                ext = Path.GetExtension(node.Text).ToUpper();
+                isSound = _appConfigInfo.AudioFileExtensions.Contains(ext);
+                if (isSound)
+                    audioFileArray.Add(node.FullPath.Substring(NodeRootTextLenght));
+
+                Thread.Sleep(100);
             }
         }
 
@@ -294,53 +339,108 @@ namespace MusicManager
 
         #endregion
 
+        #region UI Events
+
+        private void FormMain_Load(object sender, EventArgs e)
+        {
+            this.Text = $"{this.Text} - Version: {System.Windows.Forms.Application.ProductVersion}";
+            this.textBoxFolder.Text = _appConfigInfo.FolderRoot;
+        }
+
+        private void buttonClose_Click(object sender, EventArgs e)
+        {
+            this.backgroundWorker1.CancelAsync();
+            Close();
+        }
+
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            if (backgroundWorker1.IsBusy)
+            {
+                if (backgroundWorker1.WorkerSupportsCancellation)
+                    backgroundWorker1.CancelAsync();
+            }
+
+            if (backgroundWorker2.IsBusy)
+            {
+                if (backgroundWorker2.WorkerSupportsCancellation)
+                    backgroundWorker2.CancelAsync();
+            }
+        }
+
+        private void buttonPlay_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (backgroundWorker2.IsBusy)
+                    return;
+
+                if (treeView1.SelectedNode == null)
+                    return;
+
+                TreeNode tempNode = treeView1.SelectedNode;
+                int nodeRootTextLenght = treeView1.Nodes[0].Text.Length;
+
+                ChangeFormStatus(false);
+
+                // set arguments to worker
+                // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
+                // deve receber object class com toda a info necessaria como arguments.
+                WorkerArguments2 arguments = new WorkerArguments2(tempNode, nodeRootTextLenght);
+
+                backgroundWorker2.RunWorkerAsync(arguments);
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ChangeFormStatus(true);
+            }
+        }
+
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (buttonPlay.Enabled == false)
                 buttonPlay.Enabled = true;
         }
 
-        private string Xpto(TreeNode treeNode)
+        private void FormMain_Shown(object sender, EventArgs e)
         {
-            List<string> audioFileArray = new List<string>();
-            int rootLen = treeView1.Nodes[0].Text.Length;
+            //https://learn.microsoft.com/en-us/dotnet/desktop/winforms/order-of-events-in-windows-forms?view=netframeworkdesktop-4.8
 
-            GetFilesFromTree(treeNode, audioFileArray, rootLen);
-
-            StringBuilder sb = new StringBuilder();
-            foreach (string audioFile in audioFileArray)
-            {
-                sb.Append("\"" + this._appConfigInfo.FolderRoot + audioFile + "\" ");
-            }
-
-            return sb.ToString();
+            this.buttonProcess_Click(sender, e);
         }
 
-        private void GetFilesFromTree(TreeNode treeNode, List<string> audioFileArray, int rootLen)
+        private void buttonProcess_Click(object sender, EventArgs e)
         {
-            string ext;
-            bool isSound;
-
-            foreach (TreeNode node in treeNode.Nodes)
+            try
             {
-                if (node.Nodes.Count > 0)
-                {
-                    GetFilesFromTree(node, audioFileArray, rootLen);
-                    continue;
-                }
+                if (textBoxFolder.Text == null)
+                    return;
 
-                ext = Path.GetExtension(node.Text).ToUpper();
-                isSound = _appConfigInfo.AudioFileExtensions.Contains(ext);
-                if (isSound)
-                    audioFileArray.Add(node.FullPath.Substring(rootLen));
+                if (textBoxFolder.Text == "")
+                    return;
 
-                //Thread.Sleep(100);
+                if (backgroundWorker1.IsBusy == true)
+                    return;
+
+                ChangeFormStatus(false);
+
+                // set arguments to worker
+                // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
+                // deve receber object class com toda a info necessaria como arguments.
+                WorkerArguments1 arguments = new WorkerArguments1(textBoxFolder.Text);
+
+                backgroundWorker1.RunWorkerAsync(arguments);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ChangeFormStatus(true);
             }
         }
 
-        private void treeView1_DoubleClick(object sender, EventArgs e)
-        {
-          
-        }
+        #endregion
+
     }
 }

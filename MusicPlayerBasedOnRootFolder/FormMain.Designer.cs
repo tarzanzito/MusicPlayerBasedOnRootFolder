@@ -33,12 +33,12 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.directorySearcher1 = new System.DirectoryServices.DirectorySearcher();
             this.treeView1 = new System.Windows.Forms.TreeView();
             this.buttonProcess = new System.Windows.Forms.Button();
             this.buttonPlay = new System.Windows.Forms.Button();
             this.textBoxFolder = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // buttonClose
@@ -84,12 +84,6 @@
             this.progressBar1.TabIndex = 8;
             this.progressBar1.Visible = false;
             // 
-            // directorySearcher1
-            // 
-            this.directorySearcher1.ClientTimeout = System.TimeSpan.Parse("-00:00:01");
-            this.directorySearcher1.ServerPageTimeLimit = System.TimeSpan.Parse("-00:00:01");
-            this.directorySearcher1.ServerTimeLimit = System.TimeSpan.Parse("-00:00:01");
-            // 
             // treeView1
             // 
             this.treeView1.Location = new System.Drawing.Point(6, 45);
@@ -97,7 +91,6 @@
             this.treeView1.Size = new System.Drawing.Size(580, 290);
             this.treeView1.TabIndex = 11;
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
-            this.treeView1.DoubleClick += new System.EventHandler(this.treeView1_DoubleClick);
             // 
             // buttonProcess
             // 
@@ -137,6 +130,14 @@
             this.label2.TabIndex = 14;
             this.label2.Text = "Folder";
             // 
+            // backgroundWorker2
+            // 
+            this.backgroundWorker2.WorkerReportsProgress = true;
+            this.backgroundWorker2.WorkerSupportsCancellation = true;
+            this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
+            this.backgroundWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker2_ProgressChanged);
+            this.backgroundWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker2_RunWorkerCompleted);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -169,12 +170,12 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.DirectoryServices.DirectorySearcher directorySearcher1;
         private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.Button buttonProcess;
         private System.Windows.Forms.Button buttonPlay;
         private System.Windows.Forms.TextBox textBoxFolder;
         private System.Windows.Forms.Label label2;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
     }
 }
 
