@@ -43,7 +43,8 @@ namespace MusicManager
                 if (Directory.Exists(arguments.FolderRoot))
                 {
                     TreeNode treeNode = ListDirectory(arguments.FolderRoot, e);
-                    WorkerResult1 result = new WorkerResult1(treeNode);
+
+                    WorkerResult1 result = new WorkerResult1(treeNode, arguments.FolderRoot);
                     e.Result = result;
                 }
                 else
@@ -51,8 +52,9 @@ namespace MusicManager
             }
             catch (Exception ex)
             {
+                backgroundWorker1.CancelAsync();
                 //e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
-                throw ex;
+                e.Result = ex;
             }
         }
 
@@ -98,7 +100,7 @@ namespace MusicManager
                                 if (treeView1.Nodes.Count > 0)
                                 {
                                     treeView1.Nodes[0].Expand();
-                                    _lastFullPath = textBoxFolder.Text;
+                                    _lastFullPath = result.FolderRoot;
                                 }
                             }
                         }
@@ -221,7 +223,8 @@ namespace MusicManager
             }
             catch (Exception ex) 
             {
-              // e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
+                backgroundWorker1.CancelAsync();
+                // e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
                 e.Result = ex;
             }
         }
