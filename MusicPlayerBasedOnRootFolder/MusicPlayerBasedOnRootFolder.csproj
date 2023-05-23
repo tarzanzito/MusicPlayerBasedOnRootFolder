@@ -7,7 +7,7 @@
     <ProjectGuid>{D067E547-5279-4743-86E8-1C2E3A390BE4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>MusicManager</RootNamespace>
-    <AssemblyName>MusicPlayByFoldersArtistYearAlbum</AssemblyName>
+    <AssemblyName>MusicPlayerBasedOnRootFolder</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -63,6 +63,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WorkerResult1.cs" />
     <Compile Include="WorkerResult2.cs" />
     <Compile Include="WorkerArguments2.cs" />
     <Compile Include="WorkerProcessState.cs" />

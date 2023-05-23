@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MusicManager
 {
@@ -15,8 +14,8 @@ namespace MusicManager
         #region Fields
 
         private readonly AppConfigInfo _appConfigInfo;
-        private TreeNode _treeNodeRoot;
-        
+        private string _lastFullPath;
+
         #endregion
 
         #region Constructors
@@ -42,12 +41,17 @@ namespace MusicManager
                 WorkerArguments1 arguments = e.Argument as WorkerArguments1;
 
                 if (Directory.Exists(arguments.FolderRoot))
-                    ListDirectory(arguments.FolderRoot, e);
+                {
+                    TreeNode treeNode = ListDirectory(arguments.FolderRoot, e);
+                    WorkerResult1 result = new WorkerResult1(treeNode);
+                    e.Result = result;
+                }
                 else
                     throw new Exception($"Directory not exits. [{arguments.FolderRoot}]");
             }
             catch (Exception ex)
             {
+                //e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
                 throw ex;
             }
         }
@@ -64,33 +68,64 @@ namespace MusicManager
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Cancelled)
-                _treeNodeRoot = null;
-
-            if (_treeNodeRoot != null)
+            try
             {
-                treeView1.Nodes.Add(_treeNodeRoot);
+                if (!e.Cancelled)
+                {
+                    if (e.Result != null)
+                    {
+                        if (e.Result.GetType() == typeof(System.Exception))
+                        {
+                            Exception ex = e.Result as Exception;
+                            throw ex;
+                        }
 
-                if (treeView1.Nodes.Count > 0)
-                    treeView1.Nodes[0].Expand();
+                        //bool isEception = typeof(System.Exception).IsAssignableFrom(e.Result.GetType());
+                        if (e.Result.GetType().IsSubclassOf(typeof(System.Exception)))
+                        {
+                            Exception ex = e.Result as Exception;
+                            throw ex;
+                        }
+
+                        if (e.Result.GetType() == typeof(WorkerResult1))
+                        {
+                            WorkerResult1 result = (WorkerResult1)e.Result;
+
+                            if (result.TreeNodeRoot != null)
+                            {
+                                treeView1.Nodes.Add(result.TreeNodeRoot);
+
+                                if (treeView1.Nodes.Count > 0)
+                                {
+                                    treeView1.Nodes[0].Expand();
+                                    _lastFullPath = textBoxFolder.Text;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ChangeFormStatus(true, true);
+                MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            ChangeFormStatus(true);
+            ChangeFormStatus(true, false);
         }
 
         #endregion
 
         #region BackgroundWorker1 Methods
 
-        private void ListDirectory(string path, DoWorkEventArgs e)
+        private TreeNode ListDirectory(string path, DoWorkEventArgs e)
         {
-            treeView1.Nodes.Clear();
+            DirectoryInfo rootDirectoryInfo = new DirectoryInfo(path);
+            TreeNode treeNodeRoot = CreateDirectoryNode(rootDirectoryInfo, e);
 
-            var rootDirectoryInfo = new DirectoryInfo(path);
+            RemoveDirectoryNode(treeNodeRoot.Nodes, e);
 
-            _treeNodeRoot = CreateDirectoryNode(rootDirectoryInfo, e);
-
-            RemoveDirectoryNode(_treeNodeRoot.Nodes, e);
+            return treeNodeRoot;
         }
 
         private TreeNode CreateDirectoryNode(DirectoryInfo directoryInfo, DoWorkEventArgs e)
@@ -126,7 +161,7 @@ namespace MusicManager
                     directoryNode.Nodes.Add(treeNode);
                 }
 
-                Thread.Sleep(10);
+                //Thread.Sleep(10);
             }
 
             foreach (var directory in directoryInfo.GetDirectories())
@@ -170,6 +205,8 @@ namespace MusicManager
 
         #region BackgroundWorker2 events
 
+        // e.Argument - deve receber object class com toda a info necessaria.
+        // Não devem ser usados directamente os conteudos que estão nos componentes
         private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
         {
             try
@@ -177,32 +214,35 @@ namespace MusicManager
                 //get Argument
                 WorkerArguments2 arguments = e.Argument as WorkerArguments2;
 
-                string files = ProcessFilesFromTree(arguments.TreeNodeRoot, arguments.NodeRootTextLenght, e);
+                string files = ProcessFilesFromTree(arguments.TreeNodeRoot, arguments.FullPathRoot, e);
+
                 WorkerResult2 result = new WorkerResult2(files);
                 e.Result = result;
             }
             catch (Exception ex) 
             {
-              //  e.Cancel = true;
+              // e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
                 e.Result = ex;
-                
             }
         }
 
         private void backgroundWorker2_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-
         }
 
         private void backgroundWorker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             try
             {
-                if (!e.Cancelled)
+                if (!e.Cancelled) 
                 {
                     if (e.Result != null)
                     {
-                        //aaaaaaaaaaaaa fazer em todos
+                        if (e.Result.GetType() == typeof(System.Exception))
+                        {
+                            Exception ex = e.Result as Exception;
+                            throw ex;
+                        }
 
                         //bool isEception = typeof(System.Exception).IsAssignableFrom(e.Result.GetType());
                         if (e.Result.GetType().IsSubclassOf(typeof(System.Exception)))
@@ -210,8 +250,6 @@ namespace MusicManager
                             Exception ex = e.Result as Exception;
                             throw ex;
                         }
-                        
-                        
 
                         if (e.Result.GetType() == typeof(WorkerResult2))
                         {
@@ -226,45 +264,58 @@ namespace MusicManager
             }
             catch (Exception ex)
             {
+                ChangeFormStatus(true, false);
                 MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            ChangeFormStatus(true);
+            ChangeFormStatus(true, false);
         }
 
         #endregion
 
         #region BackgroundWorker2 Methods
 
-        private string ProcessFilesFromTree(TreeNode treeNode, int NodeRootTextLenght, DoWorkEventArgs e)
+        private string ProcessFilesFromTree(TreeNode treeNode, string fullPathRoot, DoWorkEventArgs e)
         {
             List<string> audioFileArray = new List<string>();
 
-            GetFilesFromTree(treeNode, audioFileArray, NodeRootTextLenght, e);
+            GetFilesFromTree(treeNode, audioFileArray,"", e);
 
+            string parentPath = GetParentTreePath(treeNode, e);
+
+            string fullPath = fullPathRoot + parentPath;
+
+            string files = PathArrayToString(audioFileArray, fullPath, e);
+
+            return files;
+        }
+
+        private string GetParentTreePath(TreeNode treeNode, DoWorkEventArgs e)
+        {
             if (e.Cancel)
                 return null;
 
             StringBuilder sb = new StringBuilder();
-            foreach (string audioFile in audioFileArray)
+
+            sb.Append(Path.DirectorySeparatorChar + treeNode.Text);
+            
+            TreeNode parent = treeNode.Parent;
+            while (parent != null)
             {
                 if (backgroundWorker1.CancellationPending)
                 {
                     e.Cancel = true;
-                   break;
+                    break;
                 }
 
-                sb.Append("\"" + this._appConfigInfo.FolderRoot + audioFile + "\" ");
-                Thread.Sleep(100);
+                sb.Insert(0, Path.DirectorySeparatorChar + parent.Text);
+                parent = parent.Parent;
             }
 
-            if (e.Cancel)
-                return null;
-            
             return sb.ToString();
         }
 
-        private void GetFilesFromTree(TreeNode treeNode, List<string> audioFileArray, int NodeRootTextLenght, DoWorkEventArgs e)
+        private void GetFilesFromTree(TreeNode treeNode, List<string> audioFileArray, string fullPathRoot, DoWorkEventArgs e)
         {
             if (e.Cancel)
                 return;
@@ -282,24 +333,58 @@ namespace MusicManager
 
                 if (node.Nodes.Count > 0)
                 {
-                    GetFilesFromTree(node, audioFileArray, NodeRootTextLenght, e);
+                    string newPath = fullPathRoot + Path.DirectorySeparatorChar + node.Text;
+                    GetFilesFromTree(node, audioFileArray, newPath, e);
                     continue;
                 }
-
+    
                 ext = Path.GetExtension(node.Text).ToUpper();
                 isSound = _appConfigInfo.AudioFileExtensions.Contains(ext);
                 if (isSound)
-                    audioFileArray.Add(node.FullPath.Substring(NodeRootTextLenght));
+                {
+                    string newPath = fullPathRoot + Path.DirectorySeparatorChar + node.Text;
+                    audioFileArray.Add(newPath);
+                }
 
-                Thread.Sleep(100);
+                //Thread.Sleep(10);
             }
+        }
+
+        private string PathArrayToString(List<string> audioFileArray, string fullPath, DoWorkEventArgs e)
+        {
+            if (e.Cancel)
+                return null;
+
+            if (audioFileArray == null)
+                return null;
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string audioFile in audioFileArray)
+            {
+                if (backgroundWorker1.CancellationPending)
+                {
+                    e.Cancel = true;
+                    break;
+                }
+
+                string enclosedPath = "\"" + fullPath + audioFile + "\" ";
+                sb.Append(enclosedPath);
+
+                //Thread.Sleep(10);
+            }
+
+            if (e.Cancel)
+                return null;
+
+            return sb.ToString();
         }
 
         #endregion
 
         #region Private Methods
 
-        private void ChangeFormStatus(bool enabled)
+        private void ChangeFormStatus(bool enabled, bool cleartreeView)
         {
             if (enabled)
             {
@@ -315,7 +400,7 @@ namespace MusicManager
             }
 
             textBoxFolder.Enabled = enabled;
-            buttonPlay.Enabled = false;
+            buttonPlay.Enabled = enabled && (treeView1.Nodes.Count > 0); 
             buttonProcess.Enabled = enabled;
             buttonCancel.Enabled = !enabled;
             treeView1.Enabled = enabled && (treeView1.Nodes.Count > 0);
@@ -323,7 +408,8 @@ namespace MusicManager
 
             if (!enabled)
             {
-                treeView1.Nodes.Clear();
+                if (cleartreeView)
+                    treeView1.Nodes.Clear();
                 progressBar1.Style = ProgressBarStyle.Marquee;
             }
             else
@@ -333,9 +419,6 @@ namespace MusicManager
 
             System.Windows.Forms.Application.DoEvents();
         }
-
-
-
 
         #endregion
 
@@ -377,16 +460,18 @@ namespace MusicManager
 
                 if (treeView1.SelectedNode == null)
                     return;
+                
+                ChangeFormStatus(false, false);
 
                 TreeNode tempNode = treeView1.SelectedNode;
-                int nodeRootTextLenght = treeView1.Nodes[0].Text.Length;
 
-                ChangeFormStatus(false);
+                int len = treeView1.Nodes[0].Text.Length;
+                string fullPathRoot = _lastFullPath.Substring(0, _lastFullPath.Length - len - 1);
 
                 // set arguments to worker
                 // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
                 // deve receber object class com toda a info necessaria como arguments.
-                WorkerArguments2 arguments = new WorkerArguments2(tempNode, nodeRootTextLenght);
+                WorkerArguments2 arguments = new WorkerArguments2(tempNode, fullPathRoot);
 
                 backgroundWorker2.RunWorkerAsync(arguments);
                 
@@ -394,7 +479,7 @@ namespace MusicManager
             catch (Exception ex)
             {
                 MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ChangeFormStatus(true);
+                ChangeFormStatus(true, false);
             }
         }
 
@@ -415,8 +500,12 @@ namespace MusicManager
         {
             try
             {
+                _lastFullPath = null;
+
                 if (textBoxFolder.Text == null)
                     return;
+
+                textBoxFolder.Text = textBoxFolder.Text.Trim();
 
                 if (textBoxFolder.Text == "")
                     return;
@@ -424,7 +513,7 @@ namespace MusicManager
                 if (backgroundWorker1.IsBusy == true)
                     return;
 
-                ChangeFormStatus(false);
+                ChangeFormStatus(false, true);
 
                 // set arguments to worker
                 // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
@@ -436,7 +525,7 @@ namespace MusicManager
             catch (Exception ex)
             {
                 MessageBox.Show($"{ex.Message}", "App ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ChangeFormStatus(true);
+                ChangeFormStatus(true, true);
             }
         }
 

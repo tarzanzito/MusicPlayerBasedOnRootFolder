@@ -6,12 +6,12 @@ namespace MusicManager
     internal class WorkerArguments2
     {
         public TreeNode TreeNodeRoot { get; private set; }
-        public int NodeRootTextLenght { get; private set; }
+        public string FullPathRoot { get; private set; }
 
-        public WorkerArguments2(TreeNode treeNodeRoot, int nodeRootTextLenght)
+        public WorkerArguments2(TreeNode treeNodeRoot, string fullPathRoot)
         {
             TreeNodeRoot = treeNodeRoot;
-            NodeRootTextLenght = nodeRootTextLenght;
+            FullPathRoot = fullPathRoot;
         }
     }
 }

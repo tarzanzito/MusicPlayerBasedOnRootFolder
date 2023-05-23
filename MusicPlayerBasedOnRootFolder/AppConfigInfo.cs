@@ -3,7 +3,7 @@ namespace MusicManager
 {
     internal class AppConfigInfo
     {
-        public string FolderRoot { get; private set; }
+        public string FolderRoot { get; private set; } //loaded from main arg0
         public string MusicPlayerApplication { get; private set; }
         public string AudioFileExtensions { get; private set; } = ".MP3:.FLAC:";
            
