@@ -58,7 +58,7 @@ namespace MusicManager
 
             if (audioFileExtensions == null)
             {
-                    MessageBox.Show($"'App.Config' entry 'AudioFileExtensions' is empty (minimal = '.MP3:.FLAC:')", "App.Config ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"'App.Config' entry 'AudioFileExtensions' is empty (minimal = '.MP3|.FLAC|')", "App.Config ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return null;
             }
 
