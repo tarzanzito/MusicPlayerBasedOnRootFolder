@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.buttonClose = new System.Windows.Forms.Button();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
@@ -39,6 +40,13 @@
             this.textBoxFolder = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.playOneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.playAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.playAlbumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip1.SuspendLayout();
+            this.contextMenuStrip2.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonClose
@@ -91,6 +99,7 @@
             this.treeView1.Size = new System.Drawing.Size(580, 290);
             this.treeView1.TabIndex = 11;
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
+            this.treeView1.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseClick);
             // 
             // buttonProcess
             // 
@@ -138,6 +147,42 @@
             this.backgroundWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker2_ProgressChanged);
             this.backgroundWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker2_RunWorkerCompleted);
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.playOneToolStripMenuItem,
+            this.playAllToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            // 
+            // playOneToolStripMenuItem
+            // 
+            this.playOneToolStripMenuItem.Name = "playOneToolStripMenuItem";
+            this.playOneToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.playOneToolStripMenuItem.Text = "Play One";
+            this.playOneToolStripMenuItem.Click += new System.EventHandler(this.playOneToolStripMenuItem_Click);
+            // 
+            // playAllToolStripMenuItem
+            // 
+            this.playAllToolStripMenuItem.Name = "playAllToolStripMenuItem";
+            this.playAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.playAllToolStripMenuItem.Text = "Play All";
+            this.playAllToolStripMenuItem.Click += new System.EventHandler(this.playAllToolStripMenuItem_Click);
+            // 
+            // contextMenuStrip2
+            // 
+            this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.playAlbumToolStripMenuItem});
+            this.contextMenuStrip2.Name = "contextMenuStrip2";
+            this.contextMenuStrip2.Size = new System.Drawing.Size(136, 26);
+            // 
+            // playAlbumToolStripMenuItem
+            // 
+            this.playAlbumToolStripMenuItem.Name = "playAlbumToolStripMenuItem";
+            this.playAlbumToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.playAlbumToolStripMenuItem.Text = "Play Album";
+            this.playAlbumToolStripMenuItem.Click += new System.EventHandler(this.playAlbumToolStripMenuItem_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -160,6 +205,8 @@
             this.Text = "Music Player Based On Root Folder";
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.Shown += new System.EventHandler(this.FormMain_Shown);
+            this.contextMenuStrip1.ResumeLayout(false);
+            this.contextMenuStrip2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -176,6 +223,11 @@
         private System.Windows.Forms.TextBox textBoxFolder;
         private System.Windows.Forms.Label label2;
         private System.ComponentModel.BackgroundWorker backgroundWorker2;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem playOneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem playAllToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.ToolStripMenuItem playAlbumToolStripMenuItem;
     }
 }
 
