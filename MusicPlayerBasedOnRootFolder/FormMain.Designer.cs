@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.buttonClose = new System.Windows.Forms.Button();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorkerLoadTree = new System.ComponentModel.BackgroundWorker();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.treeView1 = new System.Windows.Forms.TreeView();
@@ -39,7 +39,7 @@
             this.buttonPlay = new System.Windows.Forms.Button();
             this.textBoxFolder = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorkerPlayList = new System.ComponentModel.BackgroundWorker();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.playOneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.playAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,13 +61,13 @@
             this.buttonClose.UseVisualStyleBackColor = true;
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
             // 
-            // backgroundWorker1
+            // backgroundWorkerLoadTree
             // 
-            this.backgroundWorker1.WorkerReportsProgress = true;
-            this.backgroundWorker1.WorkerSupportsCancellation = true;
-            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
-            this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker1_ProgressChanged);
-            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
+            this.backgroundWorkerLoadTree.WorkerReportsProgress = true;
+            this.backgroundWorkerLoadTree.WorkerSupportsCancellation = true;
+            this.backgroundWorkerLoadTree.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerTree_DoWork);
+            this.backgroundWorkerLoadTree.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerTree_ProgressChanged);
+            this.backgroundWorkerLoadTree.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerTree_RunWorkerCompleted);
             // 
             // buttonCancel
             // 
@@ -139,13 +139,13 @@
             this.label2.TabIndex = 14;
             this.label2.Text = "Folder";
             // 
-            // backgroundWorker2
+            // backgroundWorkerPlayList
             // 
-            this.backgroundWorker2.WorkerReportsProgress = true;
-            this.backgroundWorker2.WorkerSupportsCancellation = true;
-            this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
-            this.backgroundWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker2_ProgressChanged);
-            this.backgroundWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker2_RunWorkerCompleted);
+            this.backgroundWorkerPlayList.WorkerReportsProgress = true;
+            this.backgroundWorkerPlayList.WorkerSupportsCancellation = true;
+            this.backgroundWorkerPlayList.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerPlayList_DoWork);
+            this.backgroundWorkerPlayList.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerPlayList_ProgressChanged);
+            this.backgroundWorkerPlayList.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerPlayList_RunWorkerCompleted);
             // 
             // contextMenuStrip1
             // 
@@ -153,19 +153,19 @@
             this.playOneToolStripMenuItem,
             this.playAllToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(122, 48);
             // 
             // playOneToolStripMenuItem
             // 
             this.playOneToolStripMenuItem.Name = "playOneToolStripMenuItem";
-            this.playOneToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.playOneToolStripMenuItem.Size = new System.Drawing.Size(121, 22);
             this.playOneToolStripMenuItem.Text = "Play One";
             this.playOneToolStripMenuItem.Click += new System.EventHandler(this.playOneToolStripMenuItem_Click);
             // 
             // playAllToolStripMenuItem
             // 
             this.playAllToolStripMenuItem.Name = "playAllToolStripMenuItem";
-            this.playAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.playAllToolStripMenuItem.Size = new System.Drawing.Size(121, 22);
             this.playAllToolStripMenuItem.Text = "Play All";
             this.playAllToolStripMenuItem.Click += new System.EventHandler(this.playAllToolStripMenuItem_Click);
             // 
@@ -214,7 +214,7 @@
 
         #endregion
         private System.Windows.Forms.Button buttonClose;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerLoadTree;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.TreeView treeView1;
@@ -222,7 +222,7 @@
         private System.Windows.Forms.Button buttonPlay;
         private System.Windows.Forms.TextBox textBoxFolder;
         private System.Windows.Forms.Label label2;
-        private System.ComponentModel.BackgroundWorker backgroundWorker2;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerPlayList;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem playOneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem playAllToolStripMenuItem;

@@ -29,86 +29,87 @@ namespace MusicManager
 
         #endregion
 
-        #region BackgroundWorker1 events
+        #region backgroundWorkerTree events
 
         // e.Argument - deve receber object class com toda a info necessaria.
         // Não devem ser usados directamente os conteudos que estão nos componentes UI
-        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        private void backgroundWorkerTree_DoWork(object sender, DoWorkEventArgs e)
         {
             try
             {
                 //get Argument
-                WorkerArguments1 arguments = e.Argument as WorkerArguments1;
+                WorkerTreeArgument argument = e.Argument as WorkerTreeArgument;
 
-                if (Directory.Exists(arguments.FolderRoot))
+                if (Directory.Exists(argument.FolderRoot))
                 {
-                    DirectoryInfo directoryInfo = new DirectoryInfo(arguments.FolderRoot);
+                    DirectoryInfo directoryInfo = new DirectoryInfo(argument.FolderRoot);
                     string rootName = directoryInfo.Name;
 
-                    TreeNode treeNode = ListDirectory(arguments.FolderRoot, e);
+                    TreeNode treeNode = ListDirectory(argument.FolderRoot, e);
 
-                    WorkerResult1 result = new WorkerResult1(treeNode, rootName, arguments.FolderRoot);
+                    WorkerTreeResult result = new WorkerTreeResult(treeNode, rootName, argument.FolderRoot);
                     e.Result = result;
                 }
                 else
-                    throw new Exception($"Directory not exits. [{arguments.FolderRoot}]");
+                    throw new Exception($"Directory not exits. [{argument.FolderRoot}]");
             }
             catch (Exception ex)
             {
-                backgroundWorker1.CancelAsync();
+                backgroundWorkerLoadTree.CancelAsync();
                 //e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
                 e.Result = ex;
             }
         }
 
-        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void backgroundWorkerTree_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             //if (e.UserState != null)
             //{
-            //    WorkerProcessState WorkerProcessState = e.UserState as WorkerProcessState;
-            //   // listBox1.Items.Add(WorkerProcessState.Collection.ToString() + " : " + WorkerProcessState.Artist);
-            //    _folderList.Add(WorkerProcessState.Folder);
+                //WorkerProcessState WorkerProcessState = e.UserState as WorkerProcessState;
+                // listBox1.Items.Add(WorkerProcessState.Collection.ToString() + " : " + WorkerProcessState.Artist);
+                //_folderList.Add(WorkerProcessState.Folder);
             //}
         }
 
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void backgroundWorkerTree_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             try
             {
-                if (!e.Cancelled)
+                if (e.Cancelled)
+                    return;
+
+                if (e.Result == null)
+                    return;
+
+                if (e.Result.GetType() == typeof(System.Exception))
                 {
-                    if (e.Result != null)
+                    Exception ex = e.Result as Exception;
+                    throw ex;
+                }
+
+                //bool isException = typeof(System.Exception).IsAssignableFrom(e.Result.GetType());
+
+                if (e.Result.GetType().IsSubclassOf(typeof(System.Exception)))
+                {
+                    Exception ex = e.Result as Exception;
+                    throw ex;
+                }
+
+                if (e.Result.GetType() != typeof(WorkerTreeResult))
+                    throw new Exception("backgroundWorkerTree.Result is not an 'WorkerTreeResult'");
+
+                WorkerTreeResult result = (WorkerTreeResult)e.Result;
+
+                if (result.TreeNodeRoot != null)
+                {
+                    treeView1.Nodes.Add(result.TreeNodeRoot);
+
+                    if (treeView1.Nodes.Count > 0)
                     {
-                        if (e.Result.GetType() == typeof(System.Exception))
-                        {
-                            Exception ex = e.Result as Exception;
-                            throw ex;
-                        }
-
-                        //bool isException = typeof(System.Exception).IsAssignableFrom(e.Result.GetType());
-                        if (e.Result.GetType().IsSubclassOf(typeof(System.Exception)))
-                        {
-                            Exception ex = e.Result as Exception;
-                            throw ex;
-                        }
-
-                        if (e.Result.GetType() == typeof(WorkerResult1))
-                        {
-                            WorkerResult1 result = (WorkerResult1)e.Result;
-
-                            if (result.TreeNodeRoot != null)
-                            {
-                                treeView1.Nodes.Add(result.TreeNodeRoot);
-
-                                if (treeView1.Nodes.Count > 0)
-                                {
-                                    treeView1.Nodes[0].Expand();
-                                    //_lastFullPath = result.RootFolder;
-                                    _rootPath = result.RootPath;
-                                    _rootName = result.RootName;
-                                }
-                            }
-                        }
+                        treeView1.Nodes[0].Expand();
+                        //_lastFullPath = result.RootFolder;
+                        _rootPath = result.RootPath;
+                        _rootName = result.RootName;
                     }
                 }
             }
@@ -123,7 +124,7 @@ namespace MusicManager
 
         #endregion
 
-        #region BackgroundWorker1 Methods
+        #region backgroundWorkerTree Methods
 
         private TreeNode ListDirectory(string path, DoWorkEventArgs e)
         {
@@ -149,7 +150,7 @@ namespace MusicManager
 
             foreach (FileInfo file in directoryInfo.GetFiles())
             {
-                if (backgroundWorker1.CancellationPending)
+                if (backgroundWorkerLoadTree.CancellationPending)
                 {
                     e.Cancel = true;
                     break;
@@ -194,7 +195,7 @@ namespace MusicManager
                  if (e.Cancel)
                     break;
 
-                if (backgroundWorker1.CancellationPending == true)
+                if (backgroundWorkerLoadTree.CancellationPending == true)
                 {
                     e.Cancel = true;
                     break;
@@ -212,35 +213,35 @@ namespace MusicManager
 
         #endregion
 
-        #region BackgroundWorker2 events
+        #region BackgroundWorkerPlayList events
 
         // e.Argument - deve receber object class com toda a info necessaria.
         // Não devem ser usados directamente os conteudos que estão nos componentes
-        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        private void backgroundWorkerPlayList_DoWork(object sender, DoWorkEventArgs e)
         {
             try
             {
                 //get Argument
-                WorkerArguments2 arguments = e.Argument as WorkerArguments2;
+                WorkerPlayListArgument argument = e.Argument as WorkerPlayListArgument;
                 
-                string files = ProcessFilesFromTree(arguments, e);
+                string files = ProcessFilesFromTree(argument, e);
 
-                WorkerResult2 result = new WorkerResult2(files);
+                WorkerPlayListResult result = new WorkerPlayListResult(files);
                 e.Result = result;
             }
             catch (Exception ex) 
             {
-                backgroundWorker1.CancelAsync();
+                backgroundWorkerLoadTree.CancelAsync();
                 // e.Cancel = true;  // nao pode ser colocado a true porque result fica a null
                 e.Result = ex;
             }
         }
 
-        private void backgroundWorker2_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void backgroundWorkerPlayList_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
         }
 
-        private void backgroundWorker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void backgroundWorkerPlayList_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             try
             {
@@ -261,9 +262,9 @@ namespace MusicManager
                             throw ex;
                         }
 
-                        if (e.Result.GetType() == typeof(WorkerResult2))
+                        if (e.Result.GetType() == typeof(WorkerPlayListResult))
                         {
-                            WorkerResult2 result = (WorkerResult2)e.Result;
+                            WorkerPlayListResult result = (WorkerPlayListResult)e.Result;
                             if (result.Files != null)
                             {
                                 Process.Start(_appConfigInfo.MusicPlayerApplication, result.Files);
@@ -283,9 +284,9 @@ namespace MusicManager
 
         #endregion
 
-        #region BackgroundWorker2 Methods
+        #region BackgroundWorkerPlayList Methods
 
-        private string ProcessFilesFromTree(WorkerArguments2 arguments, DoWorkEventArgs e)
+        private string ProcessFilesFromTree(WorkerPlayListArgument arguments, DoWorkEventArgs e)
         {
             List<string> audioFileArray = new List<string>();
 
@@ -327,7 +328,7 @@ namespace MusicManager
 
             foreach (TreeNode node in treeNode.Nodes)
             {
-                if (backgroundWorker1.CancellationPending)
+                if (backgroundWorkerLoadTree.CancellationPending)
                 {
                     e.Cancel = true;
                     break;
@@ -356,7 +357,7 @@ namespace MusicManager
 
         private void MusicPlay(bool playAll)
         {
-                if (backgroundWorker2.IsBusy)
+                if (backgroundWorkerPlayList.IsBusy)
                     return;
 
                 if (treeView1.SelectedNode == null)
@@ -373,9 +374,9 @@ namespace MusicManager
                 // set arguments to worker
                 // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
                 // deve receber object class com toda a info necessaria como arguments.
-                WorkerArguments2 arguments = new WorkerArguments2(tempNode, fullPathRoot, playAll);
+                WorkerPlayListArgument argument = new WorkerPlayListArgument(tempNode, fullPathRoot, playAll);
 
-                backgroundWorker2.RunWorkerAsync(arguments);
+                backgroundWorkerPlayList.RunWorkerAsync(argument);
         }
 
         #endregion
@@ -432,22 +433,22 @@ namespace MusicManager
 
         private void buttonClose_Click(object sender, EventArgs e)
         {
-            this.backgroundWorker1.CancelAsync();
+            this.backgroundWorkerLoadTree.CancelAsync();
             Close();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
         {
-            if (backgroundWorker1.IsBusy)
+            if (backgroundWorkerLoadTree.IsBusy)
             {
-                if (backgroundWorker1.WorkerSupportsCancellation)
-                    backgroundWorker1.CancelAsync();
+                if (backgroundWorkerLoadTree.WorkerSupportsCancellation)
+                    backgroundWorkerLoadTree.CancelAsync();
             }
 
-            if (backgroundWorker2.IsBusy)
+            if (backgroundWorkerPlayList.IsBusy)
             {
-                if (backgroundWorker2.WorkerSupportsCancellation)
-                    backgroundWorker2.CancelAsync();
+                if (backgroundWorkerPlayList.WorkerSupportsCancellation)
+                    backgroundWorkerPlayList.CancelAsync();
             }
         }
 
@@ -492,7 +493,7 @@ namespace MusicManager
                 if (textBoxFolder.Text == "")
                     return;
 
-                if (backgroundWorker1.IsBusy == true)
+                if (backgroundWorkerLoadTree.IsBusy == true)
                     return;
 
                 ChangeFormStatus(false, true);
@@ -500,9 +501,9 @@ namespace MusicManager
                 // set arguments to worker
                 // Não devem ser usados directamente os conteudos que estão nos componentes dentro do RunWorkerAsync
                 // deve receber object class com toda a info necessaria como arguments.
-                WorkerArguments1 arguments = new WorkerArguments1(textBoxFolder.Text);
+                WorkerTreeArgument argument = new WorkerTreeArgument(textBoxFolder.Text);
 
-                backgroundWorker1.RunWorkerAsync(arguments);
+                backgroundWorkerLoadTree.RunWorkerAsync(argument);
             }
             catch (Exception ex)
             {
@@ -510,8 +511,6 @@ namespace MusicManager
                 ChangeFormStatus(true, true);
             }
         }
-
-
 
         private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {

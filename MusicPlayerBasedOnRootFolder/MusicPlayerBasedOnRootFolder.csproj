@@ -63,11 +63,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkerResult1.cs" />
-    <Compile Include="WorkerResult2.cs" />
-    <Compile Include="WorkerArguments2.cs" />
+    <Compile Include="WorkerTreeResult.cs" />
+    <Compile Include="WorkerPlayListResult.cs" />
+    <Compile Include="WorkerPlayListArgument.cs" />
     <Compile Include="WorkerProcessState.cs" />
-    <Compile Include="WorkerArguments1.cs" />
+    <Compile Include="WorkerTreeArgument.cs" />
     <EmbeddedResource Include="FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>

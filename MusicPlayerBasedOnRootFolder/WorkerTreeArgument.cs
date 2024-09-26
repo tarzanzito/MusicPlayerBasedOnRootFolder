@@ -1,11 +1,11 @@
 ﻿
 namespace MusicManager
 {
-    internal class WorkerArguments1
+    internal class WorkerTreeArgument
     {
         public string FolderRoot { get; private set; }
 
-        public WorkerArguments1(string folderRoot)
+        public WorkerTreeArgument(string folderRoot)
         {
             FolderRoot = folderRoot.Trim();
         }
